@@ -244,6 +244,8 @@ def pivot_by_plugin_type(all_plugins):
   for key, value in all_plugins.items():
     # print("type = ", value['type'])
     plugin_type = value['Type']
+    # Since type is redundant in the value, remove it.
+    del value['Type']
     if plugin_type not in pivoted:
       pivoted[plugin_type] = []
 
