@@ -13,22 +13,22 @@ from distutils.version import LooseVersion, StrictVersion
 
 
 PLUGIN_DISPLAY_TYPES = {
-  'batchsource': 'Source',
-  'streamingsource': 'Source',
-  'batchsink': 'Sink',
-  'sparksink': 'Sink',
-  'transform': 'Transform',
-  'splittertransform': 'Transform',
-  'alertpublisher': 'Alert Publisher',
-  'action': 'Action',
-  'sparkprogram': 'Action',
-  'postaction': 'Action',
+  'batchsource': 'Sources',
+  'streamingsource': 'Sources',
+  'batchsink': 'Sinks',
+  'sparksink': 'Sinks',
+  'transform': 'Transforms',
+  'splittertransform': 'Transforms',
+  'alertpublisher': 'Alert Publishers',
+  'action': 'Actions',
+  'sparkprogram': 'Actions',
+  'postaction': 'Actions',
   'batchaggregator': 'Analytics',
   'sparkcompute': 'Analytics',
   'windower': 'Analytics',
   'batchjoiner': 'Analytics',
-  'condition': 'Condition',
-  'errortransform': 'Error Handler'
+  'condition': 'Conditions',
+  'errortransform': 'Error Handlers'
 }
 
 
