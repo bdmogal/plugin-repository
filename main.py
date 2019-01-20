@@ -10,6 +10,7 @@ import pytablewriter
 from pprint import pprint
 from bs4 import BeautifulSoup
 from distutils.version import LooseVersion, StrictVersion
+from collections import OrderedDict
 
 
 PLUGIN_DISPLAY_TYPES = {
@@ -53,7 +54,7 @@ class VersionRange:
 
 
 def populate_built_in_plugins(artifacts_dir):
-  built_in_plugins = {}
+  built_in_plugins = OrderedDict()
   plugin_json_files = [pos_json for pos_json in os.listdir(artifacts_dir) if pos_json.endswith('.json')]
 
   for plugin_json_file in plugin_json_files:
@@ -67,7 +68,7 @@ def populate_built_in_plugins(artifacts_dir):
 
 
 def populate_hub_plugins(hub_dir, cdap_version):
-  hub_plugins = {}
+  hub_plugins = OrderedDict()
   packages_dir = os.path.join(hub_dir, "packages")
   # print "packages_dir", packages_dir
   for package_dir in os.listdir(packages_dir):
@@ -129,7 +130,7 @@ def get_plugin_json_file(dir):
 def parse_plugin_json(plugin_json_file):
   data = json.load(plugin_json_file)
   properties = data['properties']
-  parsed_plugins = {}
+  parsed_plugins = OrderedDict()
   for key in properties:
     # {
     #   "<plugin-name>": {
@@ -153,7 +154,7 @@ def parse_plugin_json(plugin_json_file):
 
     # initialized plugin in result, if it is not already present
     if plugin_name not in parsed_plugins:
-      parsed_plugins[plugin_name] = {}
+      parsed_plugins[plugin_name] = OrderedDict()
 
     # add name
     parsed_plugins[plugin_name]['Name'] = plugin_name
