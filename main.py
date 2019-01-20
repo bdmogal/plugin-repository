@@ -18,6 +18,7 @@ PLUGIN_DISPLAY_TYPES = {
   'streamingsource': 'Sources',
   'batchsink': 'Sinks',
   'sparksink': 'Sinks',
+  'realtimesink': 'Sinks',
   'transform': 'Transforms',
   'splittertransform': 'Transforms',
   'alertpublisher': 'Alert Publishers',
