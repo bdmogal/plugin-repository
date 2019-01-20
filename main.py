@@ -5,7 +5,6 @@ import os
 import sys
 import json
 from pprint import pprint
-import pypandoc
 import markdown
 from bs4 import BeautifulSoup
 from distutils.version import LooseVersion, StrictVersion
@@ -154,8 +153,10 @@ def parse_plugin_json(plugin_json_file):
     if plugin_name not in parsed_plugins:
       parsed_plugins[plugin_name] = {}
 
-    # add name, which will be overriden by display-name if available
+    # add name
     parsed_plugins[plugin_name]['name'] = plugin_name
+    # initialize display name to name. if available, this will be overriden by display-name from widgets json
+    parsed_plugins[plugin_name]['display-name'] = plugin_name
 
     # add type
     # conditional also due to same bug indicated above. Should never happen
@@ -177,15 +178,13 @@ def parse_plugin_json(plugin_json_file):
 def add_display_name_and_icon(plugin_name, widgets, dict_to_update):
   parsed_widgets = json.loads(widgets)
   if 'display-name' in parsed_widgets:
-    dict_to_update[plugin_name]['name'] = parsed_widgets['display-name']
+    dict_to_update[plugin_name]['display-name'] = parsed_widgets['display-name']
 
   # TODO: How to handle icons
   pass
 
 
 def add_description(plugin_name, docs, dict_to_update):
-  # data = pypandoc.convert_text(docs, 'json', format='md')
-  # print("data=" + data)
   description = find_description_element(docs)
   if description is None:
     print("Could not find description for - ", docs)
@@ -238,6 +237,19 @@ def find_title_element(soup):
     return all_h3[0]
 
 
+def pivot_by_plugin_type(all_plugins):
+  pivoted = {}
+  for key, value in all_plugins.items():
+    # print("type = ", value['type'])
+    plugin_type = value['type']
+    if plugin_type not in pivoted:
+      pivoted[plugin_type] = []
+
+    pivoted[plugin_type].append(value)
+
+  return pivoted
+
+
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('cdap_sandbox_dir', help='Absolute path to the directory containing the CDAP Sandbox')
@@ -258,8 +270,11 @@ def main():
   all_plugins = {}
   all_plugins.update(built_in_plugins)
   all_plugins.update(hub_plugins)
-  print("########## everything #########")
-  print(json.dumps(all_plugins))
+  # print("########## everything #########")
+  # print(json.dumps(all_plugins))
+
+  pivoted_by_plugin_type = pivot_by_plugin_type(all_plugins)
+  print(json.dumps(pivoted_by_plugin_type))
 
 
 if __name__ == '__main__':
