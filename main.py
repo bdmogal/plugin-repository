@@ -4,8 +4,10 @@ import argparse
 import os
 import sys
 import json
-from pprint import pprint
 import markdown
+import pandas
+import pytablewriter
+from pprint import pprint
 from bs4 import BeautifulSoup
 from distutils.version import LooseVersion, StrictVersion
 
@@ -154,16 +156,16 @@ def parse_plugin_json(plugin_json_file):
       parsed_plugins[plugin_name] = {}
 
     # add name
-    parsed_plugins[plugin_name]['name'] = plugin_name
+    parsed_plugins[plugin_name]['Name'] = plugin_name
     # initialize display name to name. if available, this will be overriden by display-name from widgets json
-    parsed_plugins[plugin_name]['display-name'] = plugin_name
+    parsed_plugins[plugin_name]['Display Name'] = plugin_name
 
     # add type
     # conditional also due to same bug indicated above. Should never happen
     if plugin_type in PLUGIN_DISPLAY_TYPES:
-      parsed_plugins[plugin_name]['type'] = PLUGIN_DISPLAY_TYPES[plugin_type]
+      parsed_plugins[plugin_name]['Type'] = PLUGIN_DISPLAY_TYPES[plugin_type]
     else:
-      parsed_plugins[plugin_name]['type'] = "Unknown"
+      parsed_plugins[plugin_name]['Type'] = "Unknown"
 
     if config_type == 'widgets':
       # add display name and icon
@@ -178,7 +180,7 @@ def parse_plugin_json(plugin_json_file):
 def add_display_name_and_icon(plugin_name, widgets, dict_to_update):
   parsed_widgets = json.loads(widgets)
   if 'display-name' in parsed_widgets:
-    dict_to_update[plugin_name]['display-name'] = parsed_widgets['display-name']
+    dict_to_update[plugin_name]['Display Name'] = parsed_widgets['display-name']
 
   # TODO: How to handle icons
   pass
@@ -191,7 +193,7 @@ def add_description(plugin_name, docs, dict_to_update):
     return
 
   # print("Found description as: ", description.string)
-  dict_to_update[plugin_name]['description'] = description.string
+  dict_to_update[plugin_name]['Description'] = description.string
 
 
 def find_description_element(docs):
@@ -241,7 +243,7 @@ def pivot_by_plugin_type(all_plugins):
   pivoted = {}
   for key, value in all_plugins.items():
     # print("type = ", value['type'])
-    plugin_type = value['type']
+    plugin_type = value['Type']
     if plugin_type not in pivoted:
       pivoted[plugin_type] = []
 
@@ -250,11 +252,30 @@ def pivot_by_plugin_type(all_plugins):
   return pivoted
 
 
+def write_as_md(plugins_by_type, output_path):
+  writer = pytablewriter.MarkdownTableWriter()
+  output = ''
+  output += '# CDAP Plugins Reference\n'
+  output += '\n'
+  for key, value in plugins_by_type.items():
+    plugin_type = key
+    output += '## ' + plugin_type + '\n'
+    output += '\n'
+    df = pandas.DataFrame(value)
+    writer.from_dataframe(df)
+    output += writer.dumps()
+    output += '\n\n'
+
+  with open(output_path, "w") as output_file:
+    output_file.write(output)
+
+
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('cdap_sandbox_dir', help='Absolute path to the directory containing the CDAP Sandbox')
   parser.add_argument('hub_dir', help='Absolute path to the directory containing the Hub source')
   parser.add_argument('-v', '--cdap_version', help='CDAP version to build plugin list for', default='5.0.0')
+  parser.add_argument('-o', '--output_path', help='Absolute path to output file. Output file must not exist. Containing directory must exist.', default='plugins.md')
   args = parser.parse_args()
 
   artifacts_dir = os.path.join(args.cdap_sandbox_dir, 'artifacts')
@@ -274,7 +295,10 @@ def main():
   # print(json.dumps(all_plugins))
 
   pivoted_by_plugin_type = pivot_by_plugin_type(all_plugins)
-  print(json.dumps(pivoted_by_plugin_type))
+  # print(json.dumps(pivoted_by_plugin_type))
+
+  # generate output
+  write_as_md(pivoted_by_plugin_type, args.output_path)
 
 
 if __name__ == '__main__':
