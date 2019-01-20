@@ -262,7 +262,7 @@ def write_as_md(plugins_by_type, output_path):
   output += '\n'
   for key, value in plugins_by_type.items():
     plugin_type = key
-    output += '## ' + plugin_type + '\n'
+    output += '## ' + plugin_type + ' (' + str(len(value)) + ')' + '\n'
     output += '\n'
     df = pandas.DataFrame(value)
     writer.from_dataframe(df)
