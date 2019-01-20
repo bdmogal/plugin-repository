@@ -1,8 +1,13 @@
+#!/usr/bin/python
+
 import argparse
 import os
 import sys
 import json
 from pprint import pprint
+import pypandoc
+import markdown
+from bs4 import BeautifulSoup
 from distutils.version import LooseVersion, StrictVersion
 
 
@@ -153,6 +158,7 @@ def parse_plugin_json(plugin_json_file):
     parsed_plugins[plugin_name]['name'] = plugin_name
 
     # add type
+    # conditional also due to same bug indicated above. Should never happen
     if plugin_type in PLUGIN_DISPLAY_TYPES:
       parsed_plugins[plugin_name]['type'] = PLUGIN_DISPLAY_TYPES[plugin_type]
     else:
@@ -160,47 +166,100 @@ def parse_plugin_json(plugin_json_file):
 
     if config_type == 'widgets':
       # add display name and icon
-      add_display_name_and_icon(properties[key], parsed_plugins)
+      add_display_name_and_icon(plugin_name, properties[key], parsed_plugins)
     elif config_type == 'doc':
       # add description
-      add_description(properties[key], parsed_plugins)
+      add_description(plugin_name, properties[key], parsed_plugins)
 
   return parsed_plugins
 
 
-def add_display_name_and_icon(widgets, dict_to_update):
+def add_display_name_and_icon(plugin_name, widgets, dict_to_update):
   parsed_widgets = json.loads(widgets)
   if 'display-name' in parsed_widgets:
-    dict_to_update['name'] = parsed_widgets['display-name']
+    dict_to_update[plugin_name]['name'] = parsed_widgets['display-name']
 
-
-def add_description(docs, dict_to_update):
+  # TODO: How to handle icons
   pass
-  # print "desc"
-  #print docs
-  #print dict_to_update
+
+
+def add_description(plugin_name, docs, dict_to_update):
+  # data = pypandoc.convert_text(docs, 'json', format='md')
+  # print("data=" + data)
+  description = find_description_element(docs)
+  if description is None:
+    print("Could not find description for - ", docs)
+    return
+
+  # print("Found description as: ", description.string)
+  dict_to_update[plugin_name]['description'] = description.string
+
+
+def find_description_element(docs):
+  html = markdown.markdown(docs)
+  # print(html)
+  soup = BeautifulSoup(html, 'html.parser')
+  description = soup.find(lambda elm: elm.name == "h2" and "Description" in elm.text)
+  if description is not None:
+    # print("h2 description = ", description)
+    return description.next_sibling.next_sibling
+
+  # print("Docs with no description h2 element = ", docs)
+  # ideally, this should not happen. however, impossible to fix all docs, so try to get
+  # it as the first element after the title
+  doc_title = find_title_element(soup)
+  if doc_title is not None:
+    # print("doc_title = ", doc_title)
+    # should not happen. should fix these docs. they have a title but no content.
+    # 1. Google Cloud Storage File Reader
+    # 2. Speech Translator
+    if doc_title.next_sibling is None:
+      # print("None next_sibling: doc_title = %s, docs = %s", doc_title, docs)
+      return None
+
+    return doc_title.next_sibling.next_sibling
+
+  # if we still can't find it, give up
+  print("Give up! Can't find description for doc = ", docs)
+  return
+
+
+def find_title_element(soup):
+  all_h1 = soup.find_all('h1')
+  if all_h1:
+    return all_h1[0]
+
+  all_h2 = soup.find_all('h2')
+  if all_h2:
+    return all_h2[0]
+
+  all_h3 = soup.find_all('h3')
+  if all_h3:
+    return all_h3[0]
 
 
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('cdap_sandbox_dir', help='Absolute path to the directory containing the CDAP Sandbox')
   parser.add_argument('hub_dir', help='Absolute path to the directory containing the Hub source')
-  parser.add_argument('cdap_version', help='CDAP version to build plugin list for')
+  parser.add_argument('-v', '--cdap_version', help='CDAP version to build plugin list for', default='5.0.0')
   args = parser.parse_args()
 
   artifacts_dir = os.path.join(args.cdap_sandbox_dir, 'artifacts')
 
   built_in_plugins = populate_built_in_plugins(artifacts_dir)
-  print "########### built in #########"
-  print json.dumps(built_in_plugins)
+  # print "########### built in #########"
+  # print json.dumps(built_in_plugins)
   hub_plugins = populate_hub_plugins(args.hub_dir, args.cdap_version)
-  print "########### hub #########"
-  print json.dumps(hub_plugins)
+  # print "########### hub #########"
+  # print json.dumps(hub_plugins)
 
   # combine/union
   all_plugins = {}
   all_plugins.update(built_in_plugins)
   all_plugins.update(hub_plugins)
+  print("########## everything #########")
+  print(json.dumps(all_plugins))
 
 
 if __name__ == '__main__':
