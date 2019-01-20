@@ -47,14 +47,21 @@ class VersionRange:
 
 
 def populate_built_in_plugins(artifacts_dir):
+  built_in_plugins = {}
   plugin_json_files = [pos_json for pos_json in os.listdir(artifacts_dir) if pos_json.endswith('.json')]
 
   for plugin_json_file in plugin_json_files:
     with open(os.path.join(artifacts_dir, plugin_json_file)) as f:
-      return parse_plugin_json(f)
+      parsed_plugin = parse_plugin_json(f)
+      # check if any plugins were parsed. In certain scenarios, json files do not have any plugins. So ignore them.
+      if parsed_plugin:
+        built_in_plugins.update(parsed_plugin)
+
+  return built_in_plugins
 
 
 def populate_hub_plugins(hub_dir, cdap_version):
+  hub_plugins = {}
   packages_dir = os.path.join(hub_dir, "packages")
   # print "packages_dir", packages_dir
   for package_dir in os.listdir(packages_dir):
@@ -74,9 +81,10 @@ def populate_hub_plugins(hub_dir, cdap_version):
 
       # found a valid plugin. now parse its json file.
       plugin_json_file = get_plugin_json_file(os.path.join(packages_dir, package_dir, version_dir))
-      print "market plugin json - ", plugin_json_file
       with open(plugin_json_file) as f:
-        return parse_plugin_json(f)
+        hub_plugins.update(parse_plugin_json(f))
+
+  return hub_plugins
 
 
 def is_valid_plugin(package_spec_absolute_path, cdap_version):
@@ -114,7 +122,8 @@ def get_plugin_json_file(dir):
 
 def parse_plugin_json(plugin_json_file):
   data = json.load(plugin_json_file)
-  properties = data["properties"]
+  properties = data['properties']
+  parsed_plugins = {}
   for key in properties:
     # {
     #   "<plugin-name>": {
@@ -128,8 +137,13 @@ def parse_plugin_json(plugin_json_file):
     config_type = splits[0]
     plugin_name_and_type = splits[1].split('-')
     plugin_name = plugin_name_and_type[0]
-    plugin_type = plugin_name_and_type[1]
-    parsed_plugins = {}
+    # this should never happen. It only happens when a plugin file is not named correctly.
+    # that scenario points to a different bug, which should be fixed.
+    # e.g. https://github.com/data-integrations/change-data-capture/pull/1
+    if len(plugin_name_and_type) < 2:
+      plugin_type = ""
+    else:
+      plugin_type = plugin_name_and_type[1]
 
     # initialized plugin in result, if it is not already present
     if plugin_name not in parsed_plugins:
@@ -139,7 +153,10 @@ def parse_plugin_json(plugin_json_file):
     parsed_plugins[plugin_name]['name'] = plugin_name
 
     # add type
-    parsed_plugins[plugin_name]['type'] = PLUGIN_DISPLAY_TYPES[plugin_type]
+    if plugin_type in PLUGIN_DISPLAY_TYPES:
+      parsed_plugins[plugin_name]['type'] = PLUGIN_DISPLAY_TYPES[plugin_type]
+    else:
+      parsed_plugins[plugin_name]['type'] = "Unknown"
 
     if config_type == 'widgets':
       # add display name and icon
@@ -148,7 +165,7 @@ def parse_plugin_json(plugin_json_file):
       # add description
       add_description(properties[key], parsed_plugins)
 
-    return parsed_plugins
+  return parsed_plugins
 
 
 def add_display_name_and_icon(widgets, dict_to_update):
@@ -175,10 +192,10 @@ def main():
 
   built_in_plugins = populate_built_in_plugins(artifacts_dir)
   print "########### built in #########"
-  print built_in_plugins
+  print json.dumps(built_in_plugins)
   hub_plugins = populate_hub_plugins(args.hub_dir, args.cdap_version)
   print "########### hub #########"
-  print hub_plugins
+  print json.dumps(hub_plugins)
 
   # combine/union
   all_plugins = {}
