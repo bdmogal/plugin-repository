@@ -29,3 +29,25 @@ Python 3.7
 ```
 /usr/local/opt/python3/bin/python3 -m pip install --upgrade pandas
 ```
+
+# Usage
+```
+$ /usr/local/opt/python3/bin/python3  main.py -h
+usage: main.py [-h] [-v CDAP_VERSION] [-o OUTPUT_PATH]
+               cdap_sandbox_dir hub_dir
+
+positional arguments:
+  cdap_sandbox_dir      Absolute path to the directory containing the CDAP
+                        Sandbox
+  hub_dir               Absolute path to the directory containing the Hub
+                        source
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v CDAP_VERSION, --cdap_version CDAP_VERSION
+                        CDAP version to build plugin list for
+  -o OUTPUT_PATH, --output_path OUTPUT_PATH
+                        Absolute path to output file. Output file must not
+                        exist. Containing directory must exist.
+```
+
