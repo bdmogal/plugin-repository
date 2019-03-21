@@ -199,7 +199,8 @@ def add_display_name_and_icon(plugin_name, widgets, dict_to_update):
   parsed_widgets = json.loads(widgets)
   if 'display-name' in parsed_widgets:
     dict_to_update[plugin_name]['Display Name'] = parsed_widgets['display-name']
-
+  if 'icon' in parsed_widgets:
+    dict_to_update[plugin_name]['Icon'] = parsed_widgets['icon']
   # TODO: How to handle icons
   pass
 

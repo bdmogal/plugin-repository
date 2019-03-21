@@ -5,6 +5,12 @@ Generates a list of plugins in CDAP, including built-in plugins and plugins from
 # Requirements
 Python 3.7
 
+pip:
+
+```
+sudo apt install python3-pip
+```
+
 [Markdown](https://python-markdown.github.io/)
 ```
 /usr/local/opt/python3/bin/python3 -m pip install --upgrade markdown
