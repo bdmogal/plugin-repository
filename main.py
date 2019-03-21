@@ -199,9 +199,10 @@ def add_display_name_and_icon(plugin_name, widgets, dict_to_update):
   parsed_widgets = json.loads(widgets)
   if 'display-name' in parsed_widgets:
     dict_to_update[plugin_name]['Display Name'] = parsed_widgets['display-name']
+  # add icon if available, else add N/A  
+  dict_to_update[plugin_name]['Icon'] = 'N/A'
   if 'icon' in parsed_widgets:
-    dict_to_update[plugin_name]['Icon'] = parsed_widgets['icon']
-  # TODO: How to handle icons
+    dict_to_update[plugin_name]['Icon'] = get_icon(parsed_widgets['icon'])
   pass
 
 
@@ -256,6 +257,20 @@ def find_title_element(soup):
   all_h3 = soup.find_all('h3')
   if all_h3:
     return all_h3[0]
+
+
+def get_icon(icon):
+  icon_type = icon['type']
+  icon_arguments = icon['arguments']
+  # print ("icon type = ", icon_type)
+  # print ("icon arguments = ", icon_arguments)
+  if icon_type == 'inline':
+    icon_data = icon_arguments['data']
+    # print ("inline icon data = ", icon_data)
+    # TODO: if render type is markdown:
+    rendered_icon = '![](' + icon_data + ')'
+    # print ("rendered icon = ", rendered_icon)
+    return rendered_icon
 
 
 def pivot_by_plugin_type(all_plugins):
