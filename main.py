@@ -30,23 +30,23 @@ from collections import OrderedDict
 
 
 PLUGIN_DISPLAY_TYPES = {
-  'batchsource': 'Sources',
-  'streamingsource': 'Sources',
-  'batchsink': 'Sinks',
-  'sparksink': 'Sinks',
-  'realtimesink': 'Sinks',
-  'transform': 'Transforms',
-  'splittertransform': 'Transforms',
-  'alertpublisher': 'Alert Publishers',
-  'action': 'Actions',
-  'sparkprogram': 'Actions',
-  'postaction': 'Actions',
+  'batchsource': 'Source',
+  'streamingsource': 'Source',
+  'batchsink': 'Sink',
+  'sparksink': 'Sink',
+  'realtimesink': 'Sink',
+  'transform': 'Transform',
+  'splittertransform': 'Transform',
+  'alertpublisher': 'Alert Publisher',
+  'action': 'Action',
+  'sparkprogram': 'Action',
+  'postaction': 'Action',
   'batchaggregator': 'Analytics',
   'sparkcompute': 'Analytics',
   'windower': 'Analytics',
   'batchjoiner': 'Analytics',
-  'condition': 'Conditions',
-  'errortransform': 'Error Handlers'
+  'condition': 'Condition',
+  'errortransform': 'Error Handler'
 }
 
 
@@ -312,7 +312,8 @@ def main():
   parser.add_argument('cdap_sandbox_dir', help='Absolute path to the directory containing the CDAP Sandbox')
   parser.add_argument('hub_dir', help='Absolute path to the directory containing the Hub source')
   parser.add_argument('-v', '--cdap_version', help='CDAP version to build plugin list for', default='5.0.0')
-  parser.add_argument('-o', '--output_path', help='Absolute path to output file. Output file must not exist. Containing directory must exist.', default='plugins.md')
+  parser.add_argument('-f', '--output_format', help='The format to generate output in', default='json')
+  parser.add_argument('-o', '--output_path', help='Absolute path to output file. Output file must not exist. Containing directory must exist.', default='plugins')
   args = parser.parse_args()
 
   artifacts_dir = os.path.join(args.cdap_sandbox_dir, 'artifacts')
@@ -331,11 +332,16 @@ def main():
   # print("########## everything #########")
   # print(json.dumps(all_plugins))
 
-  pivoted_by_plugin_type = pivot_by_plugin_type(all_plugins)
-  # print(json.dumps(pivoted_by_plugin_type))
-
+  
   # generate output
-  write_as_md(pivoted_by_plugin_type, args.output_path)
+  # JSON
+  if args.output_format == 'json':
+    f = open(args.output_path, 'w')
+    f.write(json.dumps(all_plugins))
+  elif args.output_format == 'md':
+    pivoted_by_plugin_type = pivot_by_plugin_type(all_plugins)
+    # print(json.dumps(pivoted_by_plugin_type))
+    write_as_md(pivoted_by_plugin_type, args.output_path)
 
 
 if __name__ == '__main__':
