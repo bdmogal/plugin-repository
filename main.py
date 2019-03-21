@@ -269,7 +269,7 @@ def get_icon(icon):
     # print ("inline icon data = ", icon_data)
     # TODO: if render type is markdown:
     rendered_icon = '![](' + icon_data + ')'
-    rendered_icon = '<img src="' + icon_data + '"/>'
+    rendered_icon = '<img src=\'' + icon_data + '\'/>'
     # print ("rendered icon = ", rendered_icon)
     return rendered_icon
 
